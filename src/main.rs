@@ -7,14 +7,23 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use cashback_rewards_rust::{
     adapters::persistence::{PgCashbackRepository, PgCategoryRepository, PgMerchantRepository},
-    application::{service::{ListCustomerCashbackService, ManageProductCategoriesService, RecordPurchaseService, RegisterMerchantService, TotalProductCashbackService}, ApplicationState},
+    application::{
+        ApplicationState,
+        service::{
+            ListCustomerCashbackService, ManageProductCategoriesService, RecordPurchaseService,
+            RegisterMerchantService, TotalProductCashbackService,
+        },
+    },
     web,
 };
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "cashback_rewards_rust=info,tower_http=info".into()))
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "cashback_rewards_rust=info,tower_http=info".into()),
+        )
         .with(tracing_subscriber::fmt::layer())
         .init();
 
@@ -45,7 +54,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app: Router = web::router(state);
     let listener = tokio::net::TcpListener::bind(bind_addr).await?;
     info!(%bind_addr, "cashback rewards API listening");
-    axum::serve(listener, app).with_graceful_shutdown(shutdown_signal()).await?;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
 
     Ok(())
 }

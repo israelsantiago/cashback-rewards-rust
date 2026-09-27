@@ -15,7 +15,11 @@ pub struct ProductCategory {
 
 impl ProductCategory {
     pub fn unmapped(mcc: impl Into<String>, default_rate: Decimal) -> Self {
-        Self { mcc: mcc.into(), name: "Other".to_string(), cashback_rate: default_rate }
+        Self {
+            mcc: mcc.into(),
+            name: "Other".to_string(),
+            cashback_rate: default_rate,
+        }
     }
 }
 
@@ -38,7 +42,8 @@ impl ProductCashbackTotal {
     pub fn new(product: String, total_cashback: Decimal, record_count: i64) -> Self {
         Self {
             product,
-            total_cashback: total_cashback.round_dp_with_strategy(2, rust_decimal::RoundingStrategy::ToZero),
+            total_cashback: total_cashback
+                .round_dp_with_strategy(2, rust_decimal::RoundingStrategy::ToZero),
             record_count,
         }
     }
@@ -48,9 +53,13 @@ impl ProductCashbackTotal {
 pub struct MinimumPurchaseThreshold(pub Decimal);
 
 impl Default for MinimumPurchaseThreshold {
-    fn default() -> Self { Self(Decimal::new(100, 2)) }
+    fn default() -> Self {
+        Self(Decimal::new(100, 2))
+    }
 }
 
 impl MinimumPurchaseThreshold {
-    pub fn is_met_by(&self, amount: Decimal) -> bool { amount >= self.0 }
+    pub fn is_met_by(&self, amount: Decimal) -> bool {
+        amount >= self.0
+    }
 }

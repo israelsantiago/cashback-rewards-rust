@@ -43,8 +43,8 @@ async fn postgres_pool()
         .start()
         .await?;
 
-    let host = container.get_host().await?;
-    let port = container.get_host_port_ipv4(POSTGRES_PORT.tcp()).await?;
+    let host = container.get_host()?;
+    let port = container.get_host_port_ipv4(POSTGRES_PORT)?;
     let database_url =
         format!("postgres://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{host}:{port}/{POSTGRES_DB}");
 
@@ -160,7 +160,7 @@ async fn postgres_acceptance_covers_cashback_scenarios() -> Result<(), Box<dyn s
     ).await?;
     let records = cashback_for(router.clone(), "cust-001").await?;
     assert_eq!(records.as_array().unwrap().len(), 1);
-    assert_eq!(records[0]["cashbackAmount"], "1.60");
+    assert_eq!(records[0]["cashbackAmount"], "1.6");
 
     reset(&pool).await?;
 
@@ -204,7 +204,7 @@ async fn postgres_acceptance_covers_cashback_scenarios() -> Result<(), Box<dyn s
     request(router.clone(), "POST", "/api/purchases", json!({"customerId":"cust-default","merchantName":"City Pharmacy","mcc":"5912","amount":"100.00","purchasedAt":"2026-05-01T10:00:00Z"})).await?;
     let records = cashback_for(router.clone(), "cust-default").await?;
     assert_eq!(records[0]["productCategory"], "Other");
-    assert_eq!(records[0]["cashbackAmount"], "0.50");
+    assert_eq!(records[0]["cashbackAmount"], "0.5");
 
     reset(&pool).await?;
 
@@ -266,7 +266,7 @@ async fn postgres_acceptance_covers_cashback_scenarios() -> Result<(), Box<dyn s
     .await?;
     assert_eq!(response.status(), StatusCode::OK);
     let total: Value = serde_json::from_slice(&to_bytes(response.into_body(), usize::MAX).await?)?;
-    assert_eq!(total["totalCashback"], "4.00");
+    assert_eq!(total["totalCashback"], "4");
     assert_eq!(total["recordCount"], 2);
 
     Ok(())

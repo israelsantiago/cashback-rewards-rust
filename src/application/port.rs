@@ -6,7 +6,7 @@ use thiserror::Error;
 
 use crate::domain::{
     error::DomainError,
-    model::{CashbackRecord, Merchant, ProductCategory, ProductCashbackTotal},
+    model::{CashbackRecord, Merchant, ProductCashbackTotal, ProductCategory},
 };
 
 #[derive(Debug, Error)]
@@ -26,8 +26,14 @@ pub enum ApplicationError {
 #[async_trait]
 pub trait CashbackRepository: Send + Sync {
     async fn save(&self, record: &CashbackRecord) -> Result<(), PortError>;
-    async fn find_by_customer_id(&self, customer_id: &str) -> Result<Vec<CashbackRecord>, PortError>;
-    async fn total_for_product_category(&self, product_category: &str) -> Result<Decimal, PortError>;
+    async fn find_by_customer_id(
+        &self,
+        customer_id: &str,
+    ) -> Result<Vec<CashbackRecord>, PortError>;
+    async fn total_for_product_category(
+        &self,
+        product_category: &str,
+    ) -> Result<Decimal, PortError>;
     async fn count_for_product_category(&self, product_category: &str) -> Result<i64, PortError>;
 }
 
@@ -62,8 +68,13 @@ pub trait ManageProductCategoriesUseCase: Send + Sync {
 
 #[async_trait]
 pub trait RecordPurchaseUseCase: Send + Sync {
-    async fn record(&self, customer_id: &str, merchant_name: &str, mcc: &str, amount: Decimal)
-        -> Result<(), ApplicationError>;
+    async fn record(
+        &self,
+        customer_id: &str,
+        merchant_name: &str,
+        mcc: &str,
+        amount: Decimal,
+    ) -> Result<(), ApplicationError>;
 }
 
 #[async_trait]
@@ -73,5 +84,8 @@ pub trait RegisterMerchantUseCase: Send + Sync {
 
 #[async_trait]
 pub trait TotalProductCashbackUseCase: Send + Sync {
-    async fn total_for(&self, product_category: &str) -> Result<ProductCashbackTotal, ApplicationError>;
+    async fn total_for(
+        &self,
+        product_category: &str,
+    ) -> Result<ProductCashbackTotal, ApplicationError>;
 }

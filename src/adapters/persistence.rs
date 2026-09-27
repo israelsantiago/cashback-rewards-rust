@@ -2,7 +2,9 @@ use async_trait::async_trait;
 use rust_decimal::Decimal;
 use sqlx::{PgPool, Row};
 
-use crate::application::port::{CashbackRepository, CategoryRepository, MerchantRepository, PortError};
+use crate::application::port::{
+    CashbackRepository, CategoryRepository, MerchantRepository, PortError,
+};
 use crate::domain::model::{CashbackRecord, Merchant, ProductCategory};
 
 fn normalize(name: &str) -> String {
@@ -27,15 +29,13 @@ impl PgMerchantRepository {
 #[async_trait]
 impl MerchantRepository for PgMerchantRepository {
     async fn save(&self, merchant: &Merchant) -> Result<(), PortError> {
-        sqlx::query(
-            r#"INSERT INTO merchant (normalized_name, name, partner) VALUES ($1, $2, $3)"#,
-        )
-        .bind(normalize(&merchant.name))
-        .bind(&merchant.name)
-        .bind(merchant.partner)
-        .execute(&self.pool)
-        .await
-        .map_err(db_error)?;
+        sqlx::query(r#"INSERT INTO merchant (normalized_name, name, partner) VALUES ($1, $2, $3)"#)
+            .bind(normalize(&merchant.name))
+            .bind(&merchant.name)
+            .bind(merchant.partner)
+            .execute(&self.pool)
+            .await
+            .map_err(db_error)?;
 
         Ok(())
     }
@@ -95,24 +95,28 @@ impl CategoryRepository for PgCategoryRepository {
     }
 
     async fn default_rate(&self) -> Result<Option<Decimal>, PortError> {
-        Ok(sqlx::query("SELECT rate FROM default_cashback_rate WHERE id = 1")
-            .fetch_optional(&self.pool)
-            .await
-            .map_err(db_error)?
-            .map(|row| row.get("rate")))
+        Ok(
+            sqlx::query("SELECT rate FROM default_cashback_rate WHERE id = 1")
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(db_error)?
+                .map(|row| row.get("rate")),
+        )
     }
 
     async fn find_by_mcc(&self, mcc: &str) -> Result<Option<ProductCategory>, PortError> {
-        Ok(sqlx::query("SELECT mcc, name, cashback_rate FROM product_category WHERE mcc = $1")
-            .bind(mcc)
-            .fetch_optional(&self.pool)
-            .await
-            .map_err(db_error)?
-            .map(|row| ProductCategory {
-                mcc: row.get("mcc"),
-                name: row.get("name"),
-                cashback_rate: row.get("cashback_rate"),
-            }))
+        Ok(
+            sqlx::query("SELECT mcc, name, cashback_rate FROM product_category WHERE mcc = $1")
+                .bind(mcc)
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(db_error)?
+                .map(|row| ProductCategory {
+                    mcc: row.get("mcc"),
+                    name: row.get("name"),
+                    cashback_rate: row.get("cashback_rate"),
+                }),
+        )
     }
 }
 
@@ -145,7 +149,10 @@ impl CashbackRepository for PgCashbackRepository {
         Ok(())
     }
 
-    async fn find_by_customer_id(&self, customer_id: &str) -> Result<Vec<CashbackRecord>, PortError> {
+    async fn find_by_customer_id(
+        &self,
+        customer_id: &str,
+    ) -> Result<Vec<CashbackRecord>, PortError> {
         let rows = sqlx::query(
             r#"SELECT customer_id, merchant_name, product_category, cashback_amount
                FROM cashback_record
@@ -168,7 +175,10 @@ impl CashbackRepository for PgCashbackRepository {
             .collect())
     }
 
-    async fn total_for_product_category(&self, product_category: &str) -> Result<Decimal, PortError> {
+    async fn total_for_product_category(
+        &self,
+        product_category: &str,
+    ) -> Result<Decimal, PortError> {
         let row = sqlx::query(
             "SELECT COALESCE(SUM(cashback_amount), 0) AS total FROM cashback_record WHERE product_category = $1",
         )

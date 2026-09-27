@@ -1,13 +1,16 @@
 use rust_decimal::Decimal;
 
 use crate::application::port::{
-    ApplicationError, CashbackRepo, CashbackRepository, CategoryRepo, CategoryRepository,
-    ListCustomerCashbackUseCase, ManageProductCategoriesUseCase, MerchantRepo, MerchantRepository,
-    PortError, RecordPurchaseUseCase, RegisterMerchantUseCase, TotalProductCashbackUseCase,
+    ApplicationError, CashbackRepo, CategoryRepo, ListCustomerCashbackUseCase,
+    ManageProductCategoriesUseCase, MerchantRepo, RecordPurchaseUseCase, RegisterMerchantUseCase,
+    TotalProductCashbackUseCase,
 };
+
 use crate::domain::{
     error::DomainError,
-    model::{CashbackRecord, Merchant, MinimumPurchaseThreshold, ProductCategory, ProductCashbackTotal},
+    model::{
+        CashbackRecord, Merchant, MinimumPurchaseThreshold, ProductCashbackTotal, ProductCategory,
+    },
     service::calculate_cashback,
 };
 
@@ -86,12 +89,19 @@ impl TotalProductCashbackService {
 
 #[async_trait::async_trait]
 impl TotalProductCashbackUseCase for TotalProductCashbackService {
-    async fn total_for(&self, product_category: &str) -> Result<ProductCashbackTotal, ApplicationError> {
+    async fn total_for(
+        &self,
+        product_category: &str,
+    ) -> Result<ProductCashbackTotal, ApplicationError> {
         let total = self.cashbacks.total_for_product_category(product_category);
         let count = self.cashbacks.count_for_product_category(product_category);
         let (total, count) = tokio::join!(total, count);
 
-        Ok(ProductCashbackTotal::new(product_category.to_owned(), total?, count?))
+        Ok(ProductCashbackTotal::new(
+            product_category.to_owned(),
+            total?,
+            count?,
+        ))
     }
 }
 
@@ -160,9 +170,11 @@ impl RecordPurchaseUseCase for RecordPurchaseService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::application::port::{CashbackRepository, CategoryRepository, MerchantRepository};
+    use crate::application::port::{
+        CashbackRepository, CategoryRepository, MerchantRepository, PortError,
+    };
     use async_trait::async_trait;
-    use rust_decimal_macros::dec;
+    use rust_decimal::dec;
     use std::collections::HashMap;
     use std::sync::{Arc, Mutex};
 
@@ -224,7 +236,10 @@ mod tests {
             Ok(())
         }
 
-        async fn find_by_customer_id(&self, customer_id: &str) -> Result<Vec<CashbackRecord>, PortError> {
+        async fn find_by_customer_id(
+            &self,
+            customer_id: &str,
+        ) -> Result<Vec<CashbackRecord>, PortError> {
             Ok(self
                 .0
                 .lock()
@@ -235,7 +250,10 @@ mod tests {
                 .collect())
         }
 
-        async fn total_for_product_category(&self, product_category: &str) -> Result<Decimal, PortError> {
+        async fn total_for_product_category(
+            &self,
+            product_category: &str,
+        ) -> Result<Decimal, PortError> {
             Ok(self
                 .0
                 .lock()
@@ -246,7 +264,10 @@ mod tests {
                 .sum())
         }
 
-        async fn count_for_product_category(&self, product_category: &str) -> Result<i64, PortError> {
+        async fn count_for_product_category(
+            &self,
+            product_category: &str,
+        ) -> Result<i64, PortError> {
             Ok(self
                 .0
                 .lock()
