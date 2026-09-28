@@ -8,7 +8,8 @@ use cashback_rewards_rust::domain::model::{CashbackRecord, Merchant, ProductCate
 use rust_decimal::dec;
 
 #[tokio::test]
-async fn merchant_repository_test() -> Result<(), Box<dyn std::error::Error>> {
+async fn merchant_repository_matches_java_jpa_adapter_contract()
+-> Result<(), Box<dyn std::error::Error>> {
     let context = crate::support::postgres_context().await?;
     let repository = PgMerchantRepository::new(context.pool);
 
@@ -36,7 +37,8 @@ async fn merchant_repository_test() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-async fn category_repository_test() -> Result<(), Box<dyn std::error::Error>> {
+async fn category_repository_matches_java_jpa_adapter_contract()
+-> Result<(), Box<dyn std::error::Error>> {
     let context = crate::support::postgres_context().await?;
     let repository = PgCategoryRepository::new(context.pool);
 
@@ -63,7 +65,8 @@ async fn category_repository_test() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-async fn cashback_repository_test() -> Result<(), Box<dyn std::error::Error>> {
+async fn cashback_repository_matches_java_jpa_adapter_contract()
+-> Result<(), Box<dyn std::error::Error>> {
     let context = crate::support::postgres_context().await?;
     let repository = PgCashbackRepository::new(context.pool);
 
