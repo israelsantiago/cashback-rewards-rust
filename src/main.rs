@@ -6,15 +6,20 @@ use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use cashback_rewards_rust::{
-    adapters::persistence::{PgCashbackRepository, PgCategoryRepository, PgMerchantRepository},
+    adapter::{
+        r#in::web::{self, WebState},
+        out::persistence::{PgCashbackRepository, PgCategoryRepository, PgMerchantRepository},
+    },
     application::{
-        ApplicationState,
+        port::r#in::{
+            ListCustomerCashbackUseCase, ManageProductCategoriesUseCase, RecordPurchaseUseCase,
+            RegisterMerchantUseCase, TotalProductCashbackUseCase,
+        },
         service::{
             ListCustomerCashbackService, ManageProductCategoriesService, RecordPurchaseService,
             RegisterMerchantService, TotalProductCashbackService,
         },
     },
-    web,
 };
 
 #[tokio::main]
@@ -39,16 +44,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     sqlx::migrate!("./migrations").run(&pool).await?;
 
+    // Outbound adapters: infrastructure implementations of the application's ports.
     let merchants = Arc::new(PgMerchantRepository::new(pool.clone()));
     let categories = Arc::new(PgCategoryRepository::new(pool.clone()));
     let cashbacks = Arc::new(PgCashbackRepository::new(pool));
 
-    let state = ApplicationState::new(
-        ListCustomerCashbackService::new(cashbacks.clone()),
-        ManageProductCategoriesService::new(categories.clone()),
-        RecordPurchaseService::new(merchants.clone(), categories, cashbacks.clone()),
-        RegisterMerchantService::new(merchants),
-        TotalProductCashbackService::new(cashbacks),
+    // Application services: implementations of inbound use-case ports.
+    let list_cashback: Arc<dyn ListCustomerCashbackUseCase> =
+        Arc::new(ListCustomerCashbackService::new(cashbacks.clone()));
+    let manage_categories: Arc<dyn ManageProductCategoriesUseCase> =
+        Arc::new(ManageProductCategoriesService::new(categories.clone()));
+    let record_purchase: Arc<dyn RecordPurchaseUseCase> = Arc::new(RecordPurchaseService::new(
+        merchants.clone(),
+        categories,
+        cashbacks.clone(),
+    ));
+    let register_merchant: Arc<dyn RegisterMerchantUseCase> =
+        Arc::new(RegisterMerchantService::new(merchants));
+    let total_product_cashback: Arc<dyn TotalProductCashbackUseCase> =
+        Arc::new(TotalProductCashbackService::new(cashbacks));
+
+    // Inbound adapter state contains only inbound ports, not concrete services.
+    let state = WebState::new(
+        list_cashback,
+        manage_categories,
+        record_purchase,
+        register_merchant,
+        total_product_cashback,
     );
 
     let app: Router = web::router(state);

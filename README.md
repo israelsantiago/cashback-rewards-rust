@@ -19,22 +19,25 @@ The main design choice is deliberate: SQLx keeps parameterized SQL and migration
 
 ## Architecture
 
+The package structure mirrors the Java hexagonal baseline while using Rust naming conventions:
+
 ```text
 src/
 ├── domain/
-│   ├── model.rs       # pure business types
-│   ├── service.rs     # cashback calculation
-│   └── error.rs       # domain errors
+│   ├── model/                         # business models
+│   ├── service/                       # domain services
+│   └── error.rs                       # domain errors
 ├── application/
-│   ├── port.rs        # inbound/outbound ports
-│   └── service.rs     # use-case orchestration
-├── adapters/
-│   └── persistence.rs # PostgreSQL/SQLx adapter
-└── web/
-    └── api.rs         # Axum HTTP adapter + DTOs
+│   ├── port/inbound/                  # use-case ports
+│   ├── port/outbound/                 # persistence ports
+│   └── service/                       # use-case implementations
+├── adapter/
+│   ├── inbound/web/                   # Axum controllers + DTOs
+│   └── outbound/persistence/           # SQLx adapters + persistence entities
+└── main.rs                            # composition root
 ```
 
-Dependencies flow inward: `web/adapters -> application -> domain`.
+Dependencies point toward the application/domain core: HTTP controllers depend only on inbound ports; application services depend only on outbound ports; PostgreSQL adapters implement those outbound ports. See [`docs/CLEAN_ARCHITECTURE.md`](docs/CLEAN_ARCHITECTURE.md) for the Java -> Rust 1:1 mapping.
 
 ## Implemented behavior
 
@@ -63,7 +66,6 @@ Swagger UI: `http://localhost:8080/swagger-ui`
 
 OpenAPI JSON: `http://localhost:8080/api-docs/openapi.json`
 
-Health: `GET /health`
 
 ## Configuration
 
@@ -85,7 +87,7 @@ Unit tests run without PostgreSQL:
 cargo test
 ```
 
-CI also runs Clippy, HTTP acceptance tests with in-memory ports, and an opt-in PostgreSQL migration test (`--all-features`).
+CI also runs Clippy, HTTP acceptance tests with in-memory ports, and PostgreSQL end-to-end acceptance tests using Testcontainers (`--all-features`).
 
 ## Example
 

@@ -7,4 +7,3 @@ CREATE TABLE cashback_record (
 );
 
 CREATE INDEX idx_cashback_record_customer_id ON cashback_record (customer_id);
-CREATE INDEX idx_cashback_record_product_category ON cashback_record (product_category);

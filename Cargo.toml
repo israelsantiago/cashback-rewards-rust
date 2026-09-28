@@ -10,7 +10,7 @@ readme = "README.md"
 async-trait = "0.1.92"
 axum = { version = "0.8.9", features = ["macros"] }
 chrono = { version = "0.4.42", features = ["serde"] }
-rust_decimal = { version = "1.43.0", features = ["serde", "macros"] }
+rust_decimal = { version = "1.43.0", features = ["serde", "macros", "serde-with-arbitrary-precision"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.145"
 sqlx = { version = "0.9.0", default-features = false, features = ["runtime-tokio", "tls-rustls-ring-webpki", "postgres", "migrate", "derive", "macros", "rust_decimal"] }
@@ -19,12 +19,12 @@ tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread", "signal",
 tower-http = { version = "0.7.1", features = ["trace"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"] }
-utoipa = { version = "6.0.0", features = ["chrono"] }
+utoipa = { version = "6.0.0", features = ["chrono", "decimal_float"] }
 utoipa-swagger-ui = { version = "10.0.1", features = ["axum", "vendored"] }
 
 [dev-dependencies]
-testcontainers = "=0.28.0"
 tower = "0.5.2"
+testcontainers = "0.28.0"
 
 [features]
 postgres-acceptance = []

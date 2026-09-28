@@ -6,3 +6,6 @@
 .idea/
 .vscode/
 .DS_Store
+
+# Local Debian installers
+*.deb

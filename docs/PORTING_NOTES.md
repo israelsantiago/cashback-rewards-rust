@@ -12,9 +12,9 @@
 | MockMvc acceptance tests | Axum + service-level acceptance tests | Same black-box HTTP semantics can be tested via Tower/Hyper or a running app. |
 | `application.yaml` | environment variables | Twelve-factor configuration style. |
 
-## Intentional API representation
+## API numeric representation
 
-Money and rates are represented as JSON strings (`"12.40"`, `"0.05"`) rather than JSON floating-point values. This keeps the wire representation stable and avoids accidental IEEE-754 conversion in clients.
+The Java API exposes `BigDecimal` response values as JSON numbers. The Rust API therefore serializes response `Decimal` values with `rust_decimal::serde::arbitrary_precision`, preserving exact decimal text and scale (for example `1.60`) without converting financial values through `f64`.
 
 ## Known compatibility difference
 
@@ -23,4 +23,8 @@ The Java source exposes runtime exceptions without a dedicated global exception 
 - duplicate merchant registration -> `409 Conflict`;
 - missing fallback rate for an unmapped MCC -> `422 Unprocessable Entity`.
 
-These are intentional API-quality improvements, not changes to the core cashback rules.
+These are intentionally explicit Rust error mappings. They are outside the Java controller contract and are documented here so that the core cashback rules remain separate from adapter-level error policy.
+
+### SQLx migration filenames
+
+SQLx 0.9 expects migration filenames in the form `<VERSION>_<DESCRIPTION>.sql`, where `VERSION` is a positive integer. The Rust port therefore uses `01_...sql`, `02_...sql`, and `03_...sql` instead of the original Flyway `V1__...sql` convention.
