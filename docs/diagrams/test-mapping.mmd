@@ -1,0 +1,8 @@
+flowchart LR
+    J1[Java: Context] --> R1[Rust: application_context_test.rs]
+    J2[Java: Domain model] --> R2[Rust: tests/domain/model]
+    J3[Java: Domain service] --> R3[Rust: tests/domain/service]
+    J4[Java: Application services] --> R4[Rust: tests/application/service]
+    J5[Java: Web controllers] --> R5[Rust: tests/adapter/in/web]
+    J6[Java: JPA repositories] --> R6[Rust: tests/adapter/out/persistence]
+    J7[Java: Acceptance / E2E] --> R7[Rust: tests/acceptance]

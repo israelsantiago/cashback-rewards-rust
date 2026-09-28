@@ -1,9 +1,3 @@
-#![cfg(feature = "postgres-acceptance")]
-
-#[path = "../../../support/mod.rs"]
-#[path = "../../../support/mod.rs"]
-mod support;
-
 use cashback_rewards_rust::adapter::out::persistence::{
     PgCashbackRepository, PgCategoryRepository, PgMerchantRepository,
 };
@@ -16,7 +10,7 @@ use rust_decimal::dec;
 #[tokio::test]
 async fn merchant_repository_matches_java_jpa_adapter_contract()
 -> Result<(), Box<dyn std::error::Error>> {
-    let context = support::postgres_context().await?;
+    let context = crate::support::postgres_context().await?;
     let repository = PgMerchantRepository::new(context.pool);
 
     let merchant = Merchant {
@@ -45,7 +39,7 @@ async fn merchant_repository_matches_java_jpa_adapter_contract()
 #[tokio::test]
 async fn category_repository_matches_java_jpa_adapter_contract()
 -> Result<(), Box<dyn std::error::Error>> {
-    let context = support::postgres_context().await?;
+    let context = crate::support::postgres_context().await?;
     let repository = PgCategoryRepository::new(context.pool);
 
     assert_eq!(repository.find_by_mcc("9999").await?, None);
@@ -73,7 +67,7 @@ async fn category_repository_matches_java_jpa_adapter_contract()
 #[tokio::test]
 async fn cashback_repository_matches_java_jpa_adapter_contract()
 -> Result<(), Box<dyn std::error::Error>> {
-    let context = support::postgres_context().await?;
+    let context = crate::support::postgres_context().await?;
     let repository = PgCashbackRepository::new(context.pool);
 
     repository

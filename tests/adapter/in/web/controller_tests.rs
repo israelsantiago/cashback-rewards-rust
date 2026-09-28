@@ -51,9 +51,21 @@ impl ManageProductCategoriesUseCase for CategoryUseCase {
         Ok(())
     }
 }
+
+type PurchaseValuesStore = Mutex<Option<(String, String, String, Decimal, DateTime<Utc>)>>;
+
+type ControllerTestState = (
+    WebState,
+    Arc<ListUseCase>,
+    Arc<CategoryUseCase>,
+    Arc<PurchaseUseCase>,
+    Arc<MerchantUseCase>,
+    Arc<TotalUseCase>,
+);
+
 #[derive(Default)]
 struct PurchaseUseCase {
-    values: Mutex<Option<(String, String, String, Decimal, DateTime<Utc>)>>,
+    values: PurchaseValuesStore,
 }
 #[async_trait]
 impl RecordPurchaseUseCase for PurchaseUseCase {
@@ -96,12 +108,7 @@ impl TotalProductCashbackUseCase for TotalUseCase {
     }
 }
 
-fn request(
-    app: Router,
-    method: &str,
-    uri: &str,
-    body: Value,
-) -> impl std::future::Future<Output = axum::response::Response> {
+async fn request(app: Router, method: &str, uri: &str, body: Value) -> axum::response::Response {
     app.oneshot(
         Request::builder()
             .method(method)
@@ -110,16 +117,10 @@ fn request(
             .body(Body::from(body.to_string()))
             .unwrap(),
     )
+    .await
+    .expect("Axum router request should not fail")
 }
-
-fn state() -> (
-    WebState,
-    Arc<ListUseCase>,
-    Arc<CategoryUseCase>,
-    Arc<PurchaseUseCase>,
-    Arc<MerchantUseCase>,
-    Arc<TotalUseCase>,
-) {
+fn state() -> ControllerTestState {
     let l = Arc::new(ListUseCase::default());
     let c = Arc::new(CategoryUseCase::default());
     let p = Arc::new(PurchaseUseCase::default());
@@ -154,10 +155,11 @@ async fn cashback_controller_returns_customer_cashback_as_json() {
     assert_eq!(r.status(), StatusCode::OK);
     let v: Value =
         serde_json::from_slice(&to_bytes(r.into_body(), usize::MAX).await.unwrap()).unwrap();
-    assert_eq!(
-        v,
-        json!([{"merchantName":"GreenGrocer","productCategory":"Groceries","cashbackAmount":2.40}])
-    );
+    let expected: Value = serde_json::from_str(
+        r#"[{"merchantName":"GreenGrocer","productCategory":"Groceries","cashbackAmount":2.40}]"#,
+    )
+    .unwrap();
+    assert_eq!(v, expected);
 }
 
 #[tokio::test]
@@ -250,10 +252,10 @@ async fn product_cashback_controller_returns_product_total_as_json() {
     assert_eq!(r.status(), StatusCode::OK);
     let v: Value =
         serde_json::from_slice(&to_bytes(r.into_body(), usize::MAX).await.unwrap()).unwrap();
-    assert_eq!(
-        v,
-        json!({"product":"Groceries","totalCashback":4.00,"recordCount":2})
-    );
+    let expected: Value =
+        serde_json::from_str(r#"{"product":"Groceries","totalCashback":4.00,"recordCount":2}"#)
+            .unwrap();
+    assert_eq!(v, expected);
 }
 
 #[tokio::test]

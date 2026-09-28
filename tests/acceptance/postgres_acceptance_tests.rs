@@ -1,5 +1,3 @@
-#![cfg(feature = "postgres-acceptance")]
-
 use std::sync::Arc;
 
 use axum::{

@@ -387,34 +387,3 @@ async fn register_merchant_rejects_case_and_whitespace_variants_when_port_report
         ));
     }
 }
-
-#[tokio::test]
-async fn register_merchant_rejects_case_and_whitespace_variants_when_port_reports_existing() {
-    for variant in [
-        "greengrocer",
-        "GREENGROCER",
-        " GreenGrocer ",
-        "  greengrocer  ",
-    ] {
-        let repo = Arc::new(StubMerchantRepository {
-            find_result: Mutex::new(Some(Merchant {
-                name: "GreenGrocer".into(),
-                partner: true,
-            })),
-            ..Default::default()
-        });
-        let service = RegisterMerchantService::new(repo);
-        let result = service
-            .register(Merchant {
-                name: variant.into(),
-                partner: true,
-            })
-            .await;
-        assert!(matches!(
-            result,
-            Err(ApplicationError::Domain(
-                DomainError::MerchantAlreadyRegistered(_)
-            ))
-        ));
-    }
-}

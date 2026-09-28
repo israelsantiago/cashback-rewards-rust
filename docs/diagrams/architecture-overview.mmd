@@ -1,0 +1,15 @@
+flowchart LR
+    C[Clientes / HTTP] --> W[Adapter Inbound Web<br/>Axum]
+    W --> PI[Inbound Ports<br/>Commands / Queries]
+    PI --> A[Application Services<br/>Orquestração]
+    A --> D[Domain<br/>Model + Services + Rules]
+    A --> PO[Outbound Ports<br/>Repository traits]
+    PO --> P[Adapter Outbound Persistence<br/>SQLx]
+    P --> DB[(PostgreSQL)]
+    T1[Domain tests] -.-> D
+    T2[Application tests] -.-> A
+    T3[Web adapter tests] -.-> W
+    T4[Persistence integration tests] -.-> P
+    T5[Acceptance / E2E] -.-> W
+    T5 -.-> P
+    T6[Application context smoke] -.-> A

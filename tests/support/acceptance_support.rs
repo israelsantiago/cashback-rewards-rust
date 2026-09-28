@@ -7,26 +7,17 @@ use cashback_rewards_rust::{
         r#in::web::{self, WebState},
         out::persistence::{PgCashbackRepository, PgCategoryRepository, PgMerchantRepository},
     },
-    application::service::{
-        ListCustomerCashbackService, ManageProductCategoriesService, RecordPurchaseService,
-        RegisterMerchantService, TotalProductCashbackService,
-    },
     application::{
-        port::r#in::{
-            ListCustomerCashbackUseCase, ManageProductCategoriesUseCase, RecordPurchaseUseCase,
-            RegisterMerchantUseCase, TotalProductCashbackUseCase,
-        },
         port::out::{CashbackRepository, CategoryRepository, MerchantRepository},
+        service::{
+            ListCustomerCashbackService, ManageProductCategoriesService, RecordPurchaseService,
+            RegisterMerchantService, TotalProductCashbackService,
+        },
     },
 };
 use serde_json::{Value, json};
 use std::sync::Arc;
 use tower::ServiceExt;
-
-#[path = "mod.rs"]
-pub mod postgres;
-pub use postgres::postgres_context;
-
 pub fn build_app(pool: sqlx::PgPool) -> axum::Router {
     let merchants: Arc<dyn MerchantRepository> = Arc::new(PgMerchantRepository::new(pool.clone()));
     let categories: Arc<dyn CategoryRepository> = Arc::new(PgCategoryRepository::new(pool.clone()));
