@@ -1,88 +1,12 @@
-use std::sync::Arc;
+use crate::support::postgres::postgres_context;
+use cashback_rewards_rust::bootstrap::build_app;
 
 use axum::{
     body::{Body, to_bytes},
     http::{Request, StatusCode},
 };
-use cashback_rewards_rust::{
-    adapter::{
-        r#in::web::{self, WebState},
-        out::persistence::{PgCashbackRepository, PgCategoryRepository, PgMerchantRepository},
-    },
-    application::{
-        port::out::{CashbackRepository, CategoryRepository, MerchantRepository},
-        service::{
-            ListCustomerCashbackService, ManageProductCategoriesService, RecordPurchaseService,
-            RegisterMerchantService, TotalProductCashbackService,
-        },
-    },
-};
 use serde_json::{Value, json};
-use sqlx::{PgPool, postgres::PgPoolOptions};
-use testcontainers::{
-    GenericImage, ImageExt,
-    core::{IntoContainerPort, WaitFor},
-    runners::AsyncRunner,
-};
-use tokio::time::{Duration, Instant, sleep};
 use tower::ServiceExt;
-
-const POSTGRES_PORT: u16 = 5432;
-const POSTGRES_DB: &str = "cashback";
-const POSTGRES_USER: &str = "cashback";
-const POSTGRES_PASSWORD: &str = "cashback";
-
-async fn postgres_pool()
--> Result<(testcontainers::ContainerAsync<GenericImage>, PgPool), Box<dyn std::error::Error>> {
-    let container = GenericImage::new("postgres", "18-alpine")
-        .with_wait_for(WaitFor::message_on_stderr(
-            "database system is ready to accept connections",
-        ))
-        .with_exposed_port(POSTGRES_PORT.tcp())
-        .with_env_var("POSTGRES_DB", POSTGRES_DB)
-        .with_env_var("POSTGRES_USER", POSTGRES_USER)
-        .with_env_var("POSTGRES_PASSWORD", POSTGRES_PASSWORD)
-        .start()
-        .await?;
-
-    let host = container.get_host().await?;
-    let port = container.get_host_port_ipv4(POSTGRES_PORT.tcp()).await?;
-    let database_url =
-        format!("postgres://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{host}:{port}/{POSTGRES_DB}");
-
-    let deadline = Instant::now() + Duration::from_secs(30);
-    loop {
-        match PgPoolOptions::new()
-            .max_connections(5)
-            .connect(&database_url)
-            .await
-        {
-            Ok(pool) => return Ok((container, pool)),
-            Err(_) if Instant::now() < deadline => {
-                sleep(Duration::from_millis(250)).await;
-            }
-            Err(error) => return Err(error.into()),
-        }
-    }
-}
-
-fn build_app(pool: PgPool) -> axum::Router {
-    let merchants: Arc<dyn MerchantRepository> = Arc::new(PgMerchantRepository::new(pool.clone()));
-    let categories: Arc<dyn CategoryRepository> = Arc::new(PgCategoryRepository::new(pool.clone()));
-    let cashbacks: Arc<dyn CashbackRepository> = Arc::new(PgCashbackRepository::new(pool));
-
-    web::router(WebState::new(
-        Arc::new(ListCustomerCashbackService::new(cashbacks.clone())),
-        Arc::new(ManageProductCategoriesService::new(categories.clone())),
-        Arc::new(RecordPurchaseService::new(
-            merchants.clone(),
-            categories,
-            cashbacks.clone(),
-        )),
-        Arc::new(RegisterMerchantService::new(merchants)),
-        Arc::new(TotalProductCashbackService::new(cashbacks)),
-    ))
-}
 
 async fn request(
     app: axum::Router,
@@ -101,7 +25,7 @@ async fn request(
         .await?)
 }
 
-async fn reset(pool: &PgPool) -> Result<(), sqlx::Error> {
+async fn reset(pool: &sqlx::PgPool) -> Result<(), sqlx::Error> {
     sqlx::query("TRUNCATE TABLE cashback_record, product_category, default_cashback_rate, merchant RESTART IDENTITY")
         .execute(pool)
         .await?;
@@ -127,8 +51,8 @@ async fn cashback_for(
 
 #[tokio::test]
 async fn postgres_acceptance_covers_cashback_scenarios() -> Result<(), Box<dyn std::error::Error>> {
-    let (_container, pool) = postgres_pool().await?;
-    sqlx::migrate!("./migrations").run(&pool).await?;
+    let context = postgres_context().await?;
+    let pool = context.pool;
 
     let merchant_table_exists: bool =
         sqlx::query_scalar("SELECT to_regclass('public.merchant') IS NOT NULL")

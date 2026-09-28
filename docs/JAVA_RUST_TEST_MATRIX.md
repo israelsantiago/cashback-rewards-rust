@@ -37,3 +37,13 @@ Java repository: `serenity-dojo/cashback-rewards`, branch `section-13/solution`.
 | CashbackRewardsApplicationTests | `tests/cashback_rewards_application_tests.rs` |
 
 Additional Rust-only acceptance tests are retained; they are not removed merely to force artificial 1:1 file naming.
+
+## Production-like acceptance path
+
+The Rust acceptance flow exercises the same application composition used by `main.rs`: Axum -> inbound ports -> application services -> outbound ports -> `Pg*Repository` -> PostgreSQL. The test-managed PostgreSQL instance is the infrastructure substitute; repositories are not replaced by in-memory doubles.
+
+- `tests/acceptance/api_acceptance_tests.rs` -> HTTP acceptance with production composition and real PostgreSQL
+- `tests/acceptance/postgres_acceptance_tests.rs` -> additional production-composition PostgreSQL acceptance scenarios
+- `tests/acceptance/java_gap_scenarios.rs` -> Java acceptance-gap scenarios using the same composition
+- `tests/adapter/in/web/controller_tests.rs` remains focused on the inbound adapter and may use mocked inbound ports, matching the Java `@WebMvcTest` intent.
+
