@@ -1,5 +1,4 @@
-#[path = "postgres.rs"]
+pub mod acceptance;
+pub mod fixtures;
 pub mod postgres;
-
-#[allow(unused_imports)]
-pub use postgres::*;
+pub mod runtime;

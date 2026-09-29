@@ -4,128 +4,119 @@ use cashback_rewards_rust::adapter::out::persistence::{
 use cashback_rewards_rust::application::port::out::{
     CashbackRepository, CategoryRepository, MerchantRepository,
 };
-use cashback_rewards_rust::domain::model::{CashbackRecord, Merchant, ProductCategory};
 use rust_decimal::dec;
 
-#[tokio::test]
-async fn merchant_repository_test() -> Result<(), Box<dyn std::error::Error>> {
-    let context = crate::support::postgres_context().await?;
-    let repository = PgMerchantRepository::new(context.pool);
+use crate::support::{
+    fixtures::{FixtureIdentity, TestTimer},
+    postgres::{default_rate_guard, postgres_context},
+    runtime::run_async,
+};
 
-    let merchant = Merchant {
-        name: "GreenGrocer".into(),
-        partner: true,
-    };
-    repository.save(&merchant).await?;
+#[test]
+fn merchant_repository_test() -> Result<(), Box<dyn std::error::Error>> {
+    run_async(async {
+        let pool = postgres_context().await?;
+        let fixture = FixtureIdentity::new("merchant-repository");
+        let _timer = TestTimer::new("repository", "merchant_repository_test", fixture.id());
+        let repository = PgMerchantRepository::new(pool);
+        let merchant = fixture.merchant("GreenGrocer", true);
 
-    assert_eq!(
-        repository.find_by_name("GreenGrocer").await?,
-        Some(merchant.clone())
-    );
-    assert_eq!(
-        repository.find_by_name("greengrocer").await?,
-        Some(merchant.clone())
-    );
-    assert_eq!(
-        repository.find_by_name("  GREENGROCER  ").await?,
-        Some(merchant)
-    );
-    assert_eq!(repository.find_by_name("Missing").await?, None);
+        repository.save(&merchant).await?;
 
-    Ok(())
+        assert_eq!(
+            repository.find_by_name(&merchant.name).await?,
+            Some(merchant.clone())
+        );
+        assert_eq!(
+            repository
+                .find_by_name(&merchant.name.to_lowercase())
+                .await?,
+            Some(merchant.clone())
+        );
+        assert_eq!(
+            repository
+                .find_by_name(&format!("  {}  ", merchant.name))
+                .await?,
+            Some(merchant)
+        );
+        assert_eq!(repository.find_by_name("Missing").await?, None);
+
+        Ok::<(), Box<dyn std::error::Error>>(())
+    })
 }
 
-#[tokio::test]
-async fn category_repository_test() -> Result<(), Box<dyn std::error::Error>> {
-    let context = crate::support::postgres_context().await?;
-    let repository = PgCategoryRepository::new(context.pool);
+#[test]
+fn category_repository_test() -> Result<(), Box<dyn std::error::Error>> {
+    run_async(async {
+        let pool = postgres_context().await?;
+        let fixture = FixtureIdentity::new("category-repository");
+        let _timer = TestTimer::new("repository", "category_repository_test", fixture.id());
+        let _rate_guard = default_rate_guard().await;
+        let repository = PgCategoryRepository::new(pool);
+        let category = fixture.category("Groceries", dec!(0.02));
 
-    assert_eq!(repository.find_by_mcc("9999").await?, None);
+        assert_eq!(repository.find_by_mcc(&fixture.mcc("unknown")).await?, None);
+        repository.save(&category).await?;
+        assert_eq!(
+            repository.find_by_mcc(&category.mcc).await?,
+            Some(category.clone())
+        );
 
-    let category = ProductCategory {
-        mcc: "5411".into(),
-        name: "Groceries".into(),
-        cashback_rate: dec!(0.02),
-    };
-    repository.save(&category).await?;
-    assert_eq!(
-        repository.find_by_mcc("5411").await?,
-        Some(category.clone())
-    );
+        repository.save_default_rate(dec!(0.005)).await?;
+        assert_eq!(repository.default_rate().await?, Some(dec!(0.005)));
+        repository.save_default_rate(dec!(0.01)).await?;
+        assert_eq!(repository.default_rate().await?, Some(dec!(0.01)));
 
-    repository.save_default_rate(dec!(0.005)).await?;
-    assert_eq!(repository.default_rate().await?, Some(dec!(0.005)));
-
-    repository.save_default_rate(dec!(0.01)).await?;
-    assert_eq!(repository.default_rate().await?, Some(dec!(0.01)));
-
-    Ok(())
+        Ok::<(), Box<dyn std::error::Error>>(())
+    })
 }
 
-#[tokio::test]
-async fn cashback_repository_test() -> Result<(), Box<dyn std::error::Error>> {
-    let context = crate::support::postgres_context().await?;
-    let repository = PgCashbackRepository::new(context.pool);
+#[test]
+fn cashback_repository_test() -> Result<(), Box<dyn std::error::Error>> {
+    run_async(async {
+        let pool = postgres_context().await?;
+        let fixture = FixtureIdentity::new("cashback-repository");
+        let _timer = TestTimer::new("repository", "cashback_repository_test", fixture.id());
+        let repository = PgCashbackRepository::new(pool);
 
-    repository
-        .save(&CashbackRecord {
-            customer_id: "cust-001".into(),
-            merchant_name: "Market-A".into(),
-            product_category: "Groceries".into(),
-            cashback_amount: dec!(2.40),
-        })
-        .await?;
-    repository
-        .save(&CashbackRecord {
-            customer_id: "cust-001".into(),
-            merchant_name: "FuelCo".into(),
-            product_category: "Fuel".into(),
-            cashback_amount: dec!(1.00),
-        })
-        .await?;
-    repository
-        .save(&CashbackRecord {
-            customer_id: "cust-999".into(),
-            merchant_name: "OtherShop".into(),
-            product_category: "Other".into(),
-            cashback_amount: dec!(0.50),
-        })
-        .await?;
-    repository
-        .save(&CashbackRecord {
-            customer_id: "cust-002".into(),
-            merchant_name: "Market-B".into(),
-            product_category: "Groceries".into(),
-            cashback_amount: dec!(1.60),
-        })
-        .await?;
-    repository
-        .save(&CashbackRecord {
-            customer_id: "cust-003".into(),
-            merchant_name: "FuelCo".into(),
-            product_category: "Fuel".into(),
-            cashback_amount: dec!(5.00),
-        })
-        .await?;
+        let records = [
+            fixture.cashback("cust-001", "Market-A", "Groceries", dec!(2.40)),
+            fixture.cashback("cust-001", "FuelCo", "Fuel", dec!(1.00)),
+            fixture.cashback("cust-999", "OtherShop", "Other", dec!(0.50)),
+            fixture.cashback("cust-002", "Market-B", "Groceries", dec!(1.60)),
+            fixture.cashback("cust-003", "FuelCo", "Fuel", dec!(5.00)),
+        ];
 
-    let customer_records = repository.find_by_customer_id("cust-001").await?;
-    assert_eq!(customer_records.len(), 2);
-    assert!(
-        customer_records
-            .iter()
-            .any(|r| r.merchant_name == "Market-A")
-    );
-    assert!(customer_records.iter().any(|r| r.merchant_name == "FuelCo"));
+        for record in &records {
+            repository.save(record).await?;
+        }
 
-    assert_eq!(
-        repository.total_for_product_category("Groceries").await?,
-        dec!(4.00)
-    );
-    assert_eq!(
-        repository.total_for_product_category("Travel").await?,
-        dec!(0.00)
-    );
-    assert_eq!(repository.count_for_product_category("Groceries").await?, 2);
+        let customer_id = fixture.customer_id("cust-001");
+        let customer_records = repository.find_by_customer_id(&customer_id).await?;
+        assert_eq!(customer_records.len(), 2);
+        assert!(
+            customer_records
+                .iter()
+                .any(|r| r.merchant_name == fixture.merchant_name("Market-A"))
+        );
+        assert!(
+            customer_records
+                .iter()
+                .any(|r| r.merchant_name == fixture.merchant_name("FuelCo"))
+        );
 
-    Ok(())
+        let groceries = fixture.category_name("Groceries");
+        let travel = fixture.category_name("Travel");
+        assert_eq!(
+            repository.total_for_product_category(&groceries).await?,
+            dec!(4.00)
+        );
+        assert_eq!(
+            repository.total_for_product_category(&travel).await?,
+            dec!(0.00)
+        );
+        assert_eq!(repository.count_for_product_category(&groceries).await?, 2);
+
+        Ok::<(), Box<dyn std::error::Error>>(())
+    })
 }

@@ -24,7 +24,7 @@ utoipa-swagger-ui = { version = "10.0.1", features = ["axum", "vendored"] }
 
 [dev-dependencies]
 tower = "0.5.2"
-testcontainers = "0.28.0"
-
+testcontainers = { version = "0.28.0", features = ["watchdog"] }
+uuid = { version = "1.26.1", features = ["v4"] }
 [features]
 postgres-acceptance = []
