@@ -1,9 +1,10 @@
-use rust_decimal::dec;
 use crate::support::{
     acceptance::AcceptanceFixture, postgres::postgres_context, runtime::run_async,
 };
+use rust_decimal::dec;
 #[test]
-fn total_cashback_for_product_sums_records_across_customers() -> Result<(), Box<dyn std::error::Error>> {
+fn total_cashback_for_product_sums_records_across_customers()
+-> Result<(), Box<dyn std::error::Error>> {
     run_async(async {
         let pool = postgres_context().await?;
         let fixture = AcceptanceFixture::new(pool, "product-total");

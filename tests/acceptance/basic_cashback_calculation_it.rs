@@ -1,7 +1,7 @@
-use rust_decimal::dec;
 use crate::support::{
     acceptance::AcceptanceFixture, postgres::postgres_context, runtime::run_async,
 };
+use rust_decimal::dec;
 #[test]
 fn partner_purchase_is_visible_as_cashback() -> Result<(), Box<dyn std::error::Error>> {
     run_async(async {
