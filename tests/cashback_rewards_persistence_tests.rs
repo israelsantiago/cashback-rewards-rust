@@ -3,5 +3,5 @@
 pub mod support;
 
 #[cfg(feature = "postgres-acceptance")]
-#[path = "acceptance/java_gap_scenarios.rs"]
-mod java_gap_scenarios;
+#[path = "adapter/out/persistence/repository_integration_tests.rs"]
+mod repository_integration_tests;

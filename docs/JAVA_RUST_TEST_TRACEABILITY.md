@@ -24,10 +24,10 @@ Fonte: <https://github.com/serenity-dojo/cashback-rewards/tree/section-13/soluti
 | 16 | `JpaCashbackRepositoryTest` | `tests/adapter/out/persistence/repository_integration_tests.rs` | PostgreSQL + Testcontainers |
 | 17 | `JpaCategoryRepositoryTest` | `tests/adapter/out/persistence/repository_integration_tests.rs` | PostgreSQL + Testcontainers |
 | 18 | `JpaMerchantRepositoryTest` | `tests/adapter/out/persistence/repository_integration_tests.rs` | PostgreSQL + Testcontainers |
-| 19 | `BasicCashbackCalculationIT` | `tests/acceptance/postgres_acceptance_tests.rs` | E2E/integration com PostgreSQL |
-| 20 | `MerchantCategoriesAndEligibilityIT` | `tests/acceptance/postgres_acceptance_tests.rs` | E2E/integration com PostgreSQL |
-| 21 | `MinimumPurchaseThresholdIT` | `tests/acceptance/postgres_acceptance_tests.rs` | E2E/integration com PostgreSQL |
-| 22 | `TotalCashbackPerProductIT` | `tests/acceptance/postgres_acceptance_tests.rs` | E2E/integration com PostgreSQL |
+| 19 | `BasicCashbackCalculationIT` | `tests/acceptance/cashback_rewards_acceptance_tests.rs` | E2E/integration com PostgreSQL |
+| 20 | `MerchantCategoriesAndEligibilityIT` | `tests/acceptance/cashback_rewards_acceptance_tests.rs` | E2E/integration com PostgreSQL |
+| 21 | `MinimumPurchaseThresholdIT` | `tests/acceptance/cashback_rewards_acceptance_tests.rs` | E2E/integration com PostgreSQL |
+| 22 | `TotalCashbackPerProductIT` | `tests/acceptance/cashback_rewards_acceptance_tests.rs` | E2E/integration com PostgreSQL |
 
 ## Test doubles preservados
 

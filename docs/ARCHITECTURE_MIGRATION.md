@@ -340,10 +340,10 @@ A migração preserva essas responsabilidades no Rust, consolidando alguns casos
 | `JpaCashbackRepositoryTest` | lookup, filtro, total, zero, count | `tests/adapter/out/persistence/repository_integration_tests.rs` |
 | `JpaCategoryRepositoryTest` | MCC, default rate, overwrite | `tests/adapter/out/persistence/repository_integration_tests.rs` |
 | `JpaMerchantRepositoryTest` | lookup + normalização | `tests/adapter/out/persistence/repository_integration_tests.rs` |
-| `BasicCashbackCalculationIT` | parceiro vs não parceiro + cálculo | `tests/acceptance/postgres_acceptance_tests.rs` |
-| `MerchantCategoriesAndEligibilityIT` | MCC + default category/rate | `tests/acceptance/postgres_acceptance_tests.rs` |
-| `MinimumPurchaseThresholdIT` | threshold | `tests/acceptance/postgres_acceptance_tests.rs` |
-| `TotalCashbackPerProductIT` | aggregate total/count | `tests/acceptance/postgres_acceptance_tests.rs` |
+| `BasicCashbackCalculationIT` | parceiro vs não parceiro + cálculo | `tests/acceptance/cashback_rewards_acceptance_tests.rs` |
+| `MerchantCategoriesAndEligibilityIT` | MCC + default category/rate | `tests/acceptance/cashback_rewards_acceptance_tests.rs` |
+| `MinimumPurchaseThresholdIT` | threshold | `tests/acceptance/cashback_rewards_acceptance_tests.rs` |
+| `TotalCashbackPerProductIT` | aggregate total/count | `tests/acceptance/cashback_rewards_acceptance_tests.rs` |
 
 ### Test doubles Java → Rust
 

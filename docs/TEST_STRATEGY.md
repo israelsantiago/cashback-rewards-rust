@@ -281,3 +281,25 @@ O resultado desejado é:
  acceptance ------------------------------> mesma composição + PostgreSQL real
 ```
 
+## Business-oriented test naming
+
+Active test files use the business terminology of the Java baseline rather than migration or porting history.
+The acceptance responsibilities are represented by the corresponding business names:
+
+```text
+BasicCashbackCalculationIT
+    -> tests/acceptance/basic_cashback_calculation_it.rs
+
+MerchantCategoriesAndEligibilityIT
+    -> tests/acceptance/merchant_categories_and_eligibility_it.rs
+
+MinimumPurchaseThresholdIT
+    -> tests/acceptance/minimum_purchase_threshold_it.rs
+
+TotalCashbackPerProductIT
+    -> tests/acceptance/total_cashback_per_product_it.rs
+```
+
+Terms such as `java`, `gap` and `legacy` are not domain concepts. They described temporary migration/testing history and are therefore excluded from active test source names. The Rust project may still mention Java in documentation when identifying the upstream reference implementation; that is attribution, not a test naming convention.
+
+The active Cargo integration-test targets are: `cashback_rewards_acceptance_tests.rs` and `cashback_rewards_persistence_tests.rs`.
