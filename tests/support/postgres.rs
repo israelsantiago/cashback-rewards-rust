@@ -42,6 +42,8 @@ async fn initialize_postgres()
         .start()
         .await?;
 
+    crate::support::orphan_reaper::track_container(container.id());
+
     let host = container.get_host().await?;
     let port = container
         .get_host_port_ipv4(ContainerPort::Tcp(POSTGRES_PORT))
