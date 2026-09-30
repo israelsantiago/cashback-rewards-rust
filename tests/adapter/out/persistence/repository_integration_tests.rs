@@ -94,11 +94,21 @@ fn cashback_repository_test() -> Result<(), Box<dyn std::error::Error>> {
         let customer_id = fixture.customer_id("cust-001");
         let customer_records = repository.find_by_customer_id(&customer_id).await?;
         assert_eq!(customer_records.len(), 2);
-        assert!(
-            customer_records
-                .iter()
-                .any(|r| r.merchant_name == fixture.merchant_name("Market-A"))
+        let saved_customer_record = customer_records
+            .iter()
+            .find(|r| r.merchant_name == fixture.merchant_name("Market-A"))
+            .expect("expected fixture Market-A record");
+        assert_eq!(saved_customer_record.customer_id, customer_id);
+        assert_eq!(
+            saved_customer_record.merchant_name,
+            fixture.merchant_name("Market-A")
         );
+        assert_eq!(
+            saved_customer_record.product_category,
+            fixture.category_name("Groceries")
+        );
+        assert_eq!(saved_customer_record.cashback_amount, dec!(2.40));
+
         assert!(
             customer_records
                 .iter()
