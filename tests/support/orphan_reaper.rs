@@ -7,7 +7,7 @@ lazy_static::lazy_static! {
     static ref INIT: std::sync::Once = std::sync::Once::new();
 }
 
-// Esta função C-like é chamada obrigatoriamente pelo Sistema Operacional 
+// Esta função C-like é chamada obrigatoriamente pelo Sistema Operacional
 // milissegundos antes do processo ser finalizado com sucesso.
 extern "C" fn cleanup_on_exit() {
     reap_all();
@@ -35,9 +35,7 @@ pub fn track_container(id: &str) {
 pub fn reap_all() {
     if let Ok(set) = CONTAINERS.lock() {
         for id in set.iter() {
-            let _ = Command::new("docker")
-                .args(["rm", "-f", "-v", id])
-                .output(); // Executa o expurgo físico via Docker Daemon
+            let _ = Command::new("docker").args(["rm", "-f", "-v", id]).output(); // Executa o expurgo físico via Docker Daemon
         }
     }
 }
